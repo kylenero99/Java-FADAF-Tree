@@ -164,6 +164,7 @@ public class FADAF<K extends Comparable<? super K>, D> {
             result.add(top.data);
             top = top.dup;
         }
+        Collections.sort((List)result);
         return result;
     }
 
@@ -174,8 +175,12 @@ public class FADAF<K extends Comparable<? super K>, D> {
      */
     public K getMinKey() {
         DAFTree<K, D>.DAFNode<K, D> runner = tree.getRoot();
-        while (runner.left != null)
+        if (runner == null) {
+            return null;
+        }
+        while (runner.left != null) {
             runner = runner.left;
+        }
         return runner.key;
     }
 
@@ -186,8 +191,9 @@ public class FADAF<K extends Comparable<? super K>, D> {
      */
     public K getMaxKey() {
         DAFTree<K, D>.DAFNode<K, D> runner = tree.getRoot();
-        while (runner.right != null)
+        while (runner.right != null) {
             runner = runner.right;
+        }
         return runner.key;
     }
 

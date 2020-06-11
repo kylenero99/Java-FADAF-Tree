@@ -5,7 +5,6 @@
 
 import org.junit.*;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import static org.junit.Assert.*;
