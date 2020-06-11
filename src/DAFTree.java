@@ -1,16 +1,17 @@
 /*
- * Name: TODO
- * PID: TODO
+ * Name: Kyle Nero
+ * PID: A15900980
  */
+
 import java.util.*;
 
 /**
- * TODO: Class description
+ * Tree structure with duplicate key support
  * 
  * @param <K> Generic type of key
  * @param <D> Generic type of data
- * @author TODO
- * @since TODO
+ * @author Kyle Nero
+ * @since 6/9/20
  */
 @SuppressWarnings("rawtypes")
 public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
@@ -21,7 +22,7 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
     private int nKeys; // number of unique keys stored
 
     /**
-     * TODO: Class description
+     * Node representation for tree that allows duplicate keys
      * 
      * @param <K> Generic type of key
      * @param <D> Generic type of data
@@ -40,7 +41,11 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
          * @throws NullPointerException if key or data is null
          */
         public DAFNode(K key, D data) {
-            /* TODO */
+            if (key == null || data == null) {
+                throw new NullPointerException();
+            }
+            this.key = key;
+            this.data = data;
         }
 
         /**
@@ -51,7 +56,13 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
          */
         @Override
         public boolean equals(Object obj) {
-            /* (Optional) TODO */
+            if (!(obj instanceof DAFNode)) {
+                return false;
+            }
+            DAFNode node = (DAFNode) obj;
+            if (node.key.equals(this.key) && node.data.equals(this.data)) {
+                return true;
+            }
             return false;
         }
 
@@ -62,8 +73,7 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
          */
         @Override
         public int hashCode() {
-            /* (Optional) TODO */
-            return -1;
+            return key.hashCode() + data.hashCode();
         }
 
         /* PROVIDED HELPERS, MODIFY WITH CAUTION! */
@@ -137,7 +147,8 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * Initializes an empty DAFTree.
      */
     public DAFTree() {
-        /* TODO */
+        nElems = 0;
+        nKeys = 0;
     }
 
     /**
@@ -146,8 +157,7 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @return total number of elements stored
      */
     public int size() {
-        /* TODO */
-        return -1;
+        return nElems;
     }
 
     /**
@@ -156,8 +166,7 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @return total number of unique keys stored
      */
     public int nUniqueKeys() {
-        /* TODO */
-        return -1;
+        return nKeys;
     }
 
     /**
@@ -169,8 +178,50 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @throws NullPointerException if key or data is null
      */
     public DAFNode<K, D> insert(K key, D data) {
-        /* TODO */
-        return null;
+        if (key == null || data == null) {
+            throw new NullPointerException();
+        }
+        if (lookup(key, data)) { // if key-data pair already contained, return null
+            return null;
+        }
+        DAFNode<K, D> currInsertion = new DAFNode(key, data);
+        if (root == null) { // THIS IS NECESSARY! First insertion must initialize root!
+            this.root = currInsertion;
+            nElems++;
+            nKeys++;
+            return currInsertion;
+        }
+        DAFNode<K, D> currTraversal = root;
+        while (true) {
+            if (currInsertion.key.equals(currTraversal.key)) { // found the right key
+                while (currTraversal.dup != null) {
+                    currTraversal = currTraversal.dup; // move to the bottom of the duplicates
+                }
+                currTraversal.dup = currInsertion; // actual insertion step
+                currInsertion.par = currTraversal;
+                nElems++;
+                return currInsertion;
+            } else if (currInsertion.key.compareTo(currTraversal.key) > 0) { // move/insert right
+                if (currTraversal.right == null) {
+                    currTraversal.right = currInsertion;
+                    currInsertion.par = currTraversal;
+                    nKeys++;
+                    nElems++;
+                    return currInsertion;
+                }
+                currTraversal = currTraversal.right;
+            } else {
+                if (currTraversal.left == null) { // move/insert left
+                    currTraversal.left = currInsertion;
+                    currInsertion.par = currTraversal;
+                    nKeys++;
+                    nElems++;
+                    return currInsertion;
+                }
+                currTraversal = currTraversal.left;
+
+            }
+        }
     }
 
     /**
@@ -181,8 +232,44 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @throws NullPointerException if the key is null
      */
     public boolean lookupAny(K key) {
-        /* TODO */
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        DAFNode<K, D> currTraversal = root;
+        while (currTraversal != null) {
+            if (currTraversal.key.equals(key)) {
+                return true;
+            } else if (key.compareTo(currTraversal.key) > 0) {
+                currTraversal = currTraversal.right;
+            } else {
+                currTraversal = currTraversal.left;
+            }
+        }
         return false;
+    }
+
+    /**
+     * Returns the top node with a given key.
+     *
+     * @param key key to search
+     * @return the top node with a given key
+     * @throws NullPointerException if the key is null
+     */
+    public DAFNode<K, D> lookupKeyReturnTop(K key) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        DAFNode<K, D> currTraversal = root;
+        while (currTraversal != null) {
+            if (currTraversal.key.equals(key)) {
+                return currTraversal;
+            } else if (key.compareTo(currTraversal.key) > 0) {
+                currTraversal = currTraversal.right;
+            } else {
+                currTraversal = currTraversal.left;
+            }
+        }
+        return null;
     }
 
     /**
@@ -194,7 +281,25 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @throws NullPointerException if key or data is null
      */
     public boolean lookup(K key, D data) {
-        /* TODO */
+        if (key == null || data == null) {
+            throw new NullPointerException();
+        }
+        DAFNode<K, D> currTraversal = root;
+        while (currTraversal != null) {
+            if (currTraversal.key.equals(key)) {
+                while (currTraversal != null) {
+                    if (currTraversal.data.equals(data)) {
+                        return true; // should be getting here for duplicate key-value pairs
+                    }
+                    currTraversal = currTraversal.dup;
+                }
+                return false;
+            } else if (key.compareTo(currTraversal.key) > 0) {
+                currTraversal = currTraversal.right;
+            } else {
+                currTraversal = currTraversal.left;
+            }
+        }
         return false;
     }
 
@@ -205,8 +310,24 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @throws NullPointerException if the key is null
      */
     public LinkedList<D> getAllData(K key) {
-        /* TODO */
-        return null;
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        LinkedList<D> result = new LinkedList();
+        DAFNode<K, D> currTraversal = root;
+        while (currTraversal != null) {
+            if (currTraversal.key.equals(key)) {
+                while (currTraversal != null) {
+                    result.add(currTraversal.data);
+                    currTraversal = currTraversal.dup;
+                }
+            } else if (key.compareTo(currTraversal.key) > 0) {
+                currTraversal = currTraversal.right;
+            } else {
+                currTraversal = currTraversal.left;
+            }
+        }
+        return result;
     }
 
     /**
@@ -216,7 +337,29 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @throws NullPointerException if key or data is null
      */
     public boolean remove(K key, D data) {
-        /* TODO */
+        if (key == null || data == null) {
+            throw new NullPointerException();
+        }
+        DAFNode<K, D> currTraversal = root;
+        while (currTraversal != null) {
+            if (currTraversal.key.equals(key)) {
+                while (currTraversal != null) { // found the right key
+                    if (currTraversal.data.equals(data)) { // found the right data
+                        return remove(currTraversal);
+                    } else {
+                        if (currTraversal.dup == null) {
+                            return false;
+                        }
+                        currTraversal = currTraversal.dup;
+                    }
+                }
+                return true;
+            } else if (key.compareTo(currTraversal.key) > 0) {
+                currTraversal = currTraversal.right;
+            } else {
+                currTraversal = currTraversal.left;
+            }
+        }
         return false;
     }
 
@@ -227,8 +370,28 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @throws NullPointerException if the key is null
      */
     public boolean removeAll(K key) {
-        /* TODO */
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        DAFNode<K, D> currTraversal = root;
+        while (currTraversal != null) {
+            if (currTraversal.key.equals(key)) { // if key is found
+                while (currTraversal != null) {
+                    remove(currTraversal.key, currTraversal.data); // remove it from the tree
+                    currTraversal = currTraversal.dup;
+                }
+                return true;
+            } else if (key.compareTo(currTraversal.key) > 0) {
+                currTraversal = currTraversal.right;
+            } else {
+                currTraversal = currTraversal.left;
+            }
+        }
         return false;
+    }
+
+    public DAFNode<K, D> getRoot() {
+        return root;
     }
 
     /**
@@ -237,20 +400,29 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
      * @return iterator
      */
     public Iterator<DAFNode<K, D>> iterator() {
-        /* TODO */
-        return null;
+        return new DAFTreeIterator();
     }
 
     /**
-     * TODO: Class description
+     * Representation of a DAFTree iterator to traverse a DAFTree
      */
     public class DAFTreeIterator implements Iterator<DAFNode<K, D>> {
+        private Stack<DAFNode<K, D>> stack;
 
         /**
          * Initializes a tree iterator instance.
          */
         public DAFTreeIterator() {
-            /* TODO */
+            stack = new Stack<>();
+            DAFNode runner = root;
+            while (runner != null) {
+                stack.push(runner);
+                try {
+                    runner = runner.left;
+                } catch (NullPointerException e) {
+                    break;
+                }
+            }
         }
 
         /**
@@ -259,8 +431,7 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
          * @return true if there is a next, false otherwise
          */
         public boolean hasNext() {
-            /* TODO */
-            return false;
+            return !stack.isEmpty();
         }
 
         /**
@@ -270,8 +441,28 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
          * @throws NoSuchElementException if the iterator reaches the end of traversal
          */
         public DAFNode<K, D> next() {
-            /* TODO */
-            return null;
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            DAFNode<K, D> dup = stack.peek();
+            DAFNode<K, D> top = stack.pop();
+            DAFNode<K, D> right = top.right;
+
+            while (right != null) { // as long as one of the current left diagonal node has right
+                stack.push(right); // push them all
+                right = right.left;
+            }
+            if (dup != null && !stack.contains(top.dup)) {
+                while (dup.dup != null) { // go to the bottom of the dup chain
+                    dup = dup.dup;
+                }
+                while (!dup.data.equals(top.data)) { // until we reach the top
+                    stack.push(dup); // push to the stack from the bottom up
+                    dup = dup.par;
+                }
+            }
+            return top;
         }
     }
 
@@ -296,7 +487,6 @@ public class DAFTree<K extends Comparable<? super K>, D> implements Iterable {
             // passing in par to let helper update both par and child reference
             removeHelper(cur.par, cur.key, cur.data);
         }
-
         nElems--;
         return true;
     }
